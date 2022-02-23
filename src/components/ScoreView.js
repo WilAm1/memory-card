@@ -1,10 +1,10 @@
 import React from "react";
 
-export default function ScoreView() {
+export default function ScoreView({ score, highScore }) {
   return (
     <div>
-      <p>Score: </p>
-      <p>High Score: </p>
+      <p>Score: {score} </p>
+      <p>High Score: {highScore} </p>
     </div>
   );
 }
