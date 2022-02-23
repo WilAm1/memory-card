@@ -1,15 +1,16 @@
 import React from "react";
+import Modal from "./Modal";
 
 export default function GameOverModal({ handleClick, display, children }) {
   const displayModal = display ? "display-block" : "display-none";
 
   return (
-    <div className={`${displayModal} modal`}>
+    <Modal display={displayModal}>
       <div className="modal-content">
         {children}
         <h2>Game Over</h2>
         <button onClick={handleClick}>New Game</button>
       </div>
-    </div>
+    </Modal>
   );
 }
