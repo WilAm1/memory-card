@@ -16,4 +16,18 @@ const shuffle = (array) => {
   return array;
 };
 
-export { shuffle };
+const filterData = (array) => {
+  const newArray = [];
+  for (const obj of array) {
+    const { name, id, rarity, face } = obj;
+    newArray.push({
+      name,
+      id,
+      rarity,
+      face,
+    });
+  }
+  return newArray;
+};
+
+export { shuffle, filterData };

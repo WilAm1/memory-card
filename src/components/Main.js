@@ -1,130 +1,96 @@
 import React, { useEffect, useState } from "react";
 import ScoreView from "./ScoreView";
 import CardContainer from "./CardContainer";
-import { shuffle } from "./utilities/utilities";
 import GameOverModal from "./utilities/GameOver";
+import { shuffle, filterData } from "./utilities/utilities";
+import axios from "axios";
 
-export default function Main(props) {
+const DEFAULT_CARD_LIMIT = 4;
+const DEFAULT_ADD_SIZE = 2;
+const API_LINK = "https://api.atlasacademy.io/export/NA/basic_servant.json";
+
+export default function Main() {
   // State
-  // TODO modify later to use object on related state (leveling up)
-  const [currentScore, setCurrentScore] = useState(0);
-  const [score, setScore] = useState(currentScore);
-  const [highScore, setHighScore] = useState(score);
-  const [cardsClicked, setCardsClicked] = useState([]);
-  const [level, setLevel] = useState(1);
-  const [cardLimit, setCardLimit] = useState(2);
+  const blankState = {
+    currentLevelScore: 0,
+    score: 0,
+    cardsClicked: [],
+    level: 1,
+  };
+  const [userInfo, setUserInfo] = useState({ ...blankState });
+  const [highScore, setHighScore] = useState(0);
+  const [cardLimit, setCardLimit] = useState(DEFAULT_CARD_LIMIT);
   const [cards, setCards] = useState([]);
-  const [mainAPI, setMainAPI] = useState([]);
   const [gameOver, setGameOver] = useState(false);
+  const [APIData, setAPIData] = useState([]);
 
-  // useEffect
   useEffect(() => {
     // Fetches the whole API call onLoad. One time only.
-    // https://pokeapi.co/api/v2/type Fetches Array with multiple types
     console.log("I fetched some API !");
-    getMainData();
+    fetchData();
   }, []);
 
-  const getMainData = () => {
-    fetch("https://pokeapi.co/api/v2/type/")
-      .then((response) => {
-        if (response.ok) return response.json();
-      })
-      .then((data) => {
-        data.results.splice(18, 1);
-        setMainAPI(data.results);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  };
-  const getPokemon = async (url) => {
-    console.log(url);
+  const fetchData = async () => {
     try {
-      const res = await fetch(url);
-      const data = await res.json();
-      const {
-        name,
-        id,
-        sprites: { back_default: image },
-      } = data;
-      return { name, image, id };
+      const res = await axios.get(API_LINK);
+      if (res.status === 200) {
+        const data = res.data;
+        setAPIData(data);
+      }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       throw error;
     }
   };
 
-  const getType = (url) => {
-    if (!url) return;
-    console.log(url.url);
-    fetch(url.url)
-      .then((response) => {
-        if (response.ok) return response.json();
-        throw response;
-      })
-      .then(async (data) => {
-        //   Get the image from url then spirtes/front_default
-        const shuffledAPI = shuffle(data.pokemon).slice(0, cardLimit);
-        console.log(shuffledAPI);
-        // const promises = shuffledAPI.map(
-        //   async ({ pokemon: { url } }) => await getPokemon(url)
-        // );
-        // const something = Promise.all(promises);
-        // setCards(shuffledAPI.slice(0, cardLimit));
-        const something = await Promise.all(
-          shuffledAPI.map(({ pokemon: { url } }) => getPokemon(url))
-        );
-        console.log(something);
-        setCards(something);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
+  useEffect(() => {
+    const shuffledCards = shuffle(APIData).slice(0, cardLimit);
+    const filteredData = filterData(shuffledCards);
+    setCards(filteredData);
+  }, [APIData, cardLimit]);
 
   useEffect(() => {
-    // * get some random type and put it into the cards state
-    // * shuffles
-    console.log(mainAPI);
-    const randomTypeURL = mainAPI[Math.floor(Math.random() * mainAPI.length)];
-    getType(randomTypeURL);
-  }, [mainAPI, cardLimit]);
-
-  useEffect(() => {
-    if (cards.length && currentScore === cards.length) {
-      console.log(currentScore, cards.length);
+    if (cards.length && userInfo.currentLevelScore === cards.length) {
       console.log("leveled UP!");
       levelUp();
     }
-  }, [currentScore]);
+  }, [userInfo]);
 
   const levelUp = () => {
-    setCardsClicked([]);
-    setCardLimit(cardLimit + 2);
-    setLevel(level + 1);
-    setCurrentScore(0);
+    console.log("i leveled up");
+    console.log(DEFAULT_ADD_SIZE);
+    setCardLimit(cardLimit + DEFAULT_ADD_SIZE);
+    setUserInfo({
+      ...userInfo,
+      cardsClicked: [],
+      currentLevelScore: 0,
+      level: userInfo.level + 1,
+    });
   };
 
   const resetGame = () => {
     console.log("Game Over");
-    if (score > highScore) {
-      setHighScore(score);
+
+    if (userInfo.score > highScore) {
+      setHighScore(userInfo.score);
     }
-    setCurrentScore(0);
-    setCardLimit(2);
-    setCardsClicked([]);
+
+    setCardLimit(DEFAULT_CARD_LIMIT);
+    setUserInfo({ ...blankState, highScore });
   };
 
   const handleClick = (id) => {
-    // Game Over
+    const { cardsClicked, currentLevelScore, score } = userInfo;
     if (cardsClicked.indexOf(id) > -1) {
       setGameOver(true);
       return;
     }
-    setCardsClicked(cardsClicked.concat(id));
-    setCurrentScore(currentScore + 1);
-    setScore(currentScore + 1);
+    setUserInfo({
+      ...userInfo,
+      cardsClicked: cardsClicked.concat(id),
+      currentLevelScore: currentLevelScore + 1,
+      score: score + 1,
+    });
   };
 
   const handleNewGame = () => {
@@ -136,7 +102,11 @@ export default function Main(props) {
     <main className="main game">
       {/* If Level > 5 Show You win Modal! */}
       <GameOverModal display={gameOver} handleClick={handleNewGame} />
-      <ScoreView score={score} highScore={highScore} />
+      <ScoreView
+        score={userInfo.score}
+        highScore={highScore}
+        level={userInfo.level}
+      />
       <CardContainer cards={cards} handleClick={handleClick} />
     </main>
   );
