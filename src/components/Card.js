@@ -11,10 +11,22 @@ export default function CardContainer({
     return new Array(num).fill("⭐").join("");
   };
   return (
-    <div className="card" data-id={id} key={id} onClick={handleClick}>
-      <img src={face} alt={name} />
-      <p>{getRarity(rarity)}</p>
-      {name}
+    <div
+      className="card"
+      data-id={id}
+      onClick={handleClick}
+      data-rarity={rarity}
+      style={{
+        backgroundImage: `url(${face})`,
+        backgroundSize: "cover",
+        backgroundPosition: "top",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      <span className="stars">{getRarity(rarity)}</span>
+      <div className="card-data">
+        <p className="card-name">{name}</p>
+      </div>
     </div>
   );
 }

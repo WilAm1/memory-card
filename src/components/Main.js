@@ -25,8 +25,6 @@ export default function Main() {
   const [APIData, setAPIData] = useState([]);
 
   useEffect(() => {
-    // Fetches the whole API call onLoad. One time only.
-    console.log("I fetched some API !");
     fetchData();
   }, []);
 
@@ -38,7 +36,6 @@ export default function Main() {
         setAPIData(data);
       }
     } catch (error) {
-      console.error(error);
       throw error;
     }
   };
@@ -57,7 +54,6 @@ export default function Main() {
   }, [userInfo]);
 
   const levelUp = () => {
-    console.log("i leveled up");
     console.log(DEFAULT_ADD_SIZE);
     setCardLimit(cardLimit + DEFAULT_ADD_SIZE);
     setUserInfo({
@@ -69,8 +65,6 @@ export default function Main() {
   };
 
   const resetGame = () => {
-    console.log("Game Over");
-
     if (userInfo.score > highScore) {
       setHighScore(userInfo.score);
     }
@@ -100,14 +94,17 @@ export default function Main() {
 
   return (
     <main className="main game">
-      {/* If Level > 5 Show You win Modal! */}
-      <GameOverModal display={gameOver} handleClick={handleNewGame} />
       <ScoreView
         score={userInfo.score}
         highScore={highScore}
         level={userInfo.level}
       />
-      <CardContainer cards={cards} handleClick={handleClick} />
+
+      {gameOver ? (
+        <GameOverModal display={gameOver} handleClick={handleNewGame} />
+      ) : (
+        <CardContainer cards={cards} handleClick={handleClick} />
+      )}
     </main>
   );
 }
